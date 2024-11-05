@@ -40,8 +40,8 @@ namespace ProyectoOptica.Server.Controllers
             try
             {
                 var citas = await context.Citas
-                    .Include(c => c.Disponibilidades)
-                    .ThenInclude(d => d.Optometristas)
+                    .Include(e => e.Disponibilidades)
+                    .ThenInclude(e => e.Optometristas)
                     .ToListAsync();
 
                 var listaCitasDTO = mapper.Map<List<ListaDeCitasDTO>>(citas);
@@ -126,40 +126,63 @@ namespace ProyectoOptica.Server.Controllers
         }
 
         // Actualiza una cita existente
-        [HttpPut("{id}")]
-        public async Task<IActionResult> ActualizarCita(int id, [FromBody] Cita citaActualizada)
+        [HttpPut("{id:int}")] // api/reservas/2
+        public async Task<ActionResult> ActualizarCita(int id, [FromBody] Cita entidad)
         {
-            var citaExistente = await context.Citas.FindAsync(id);
+            // Verificar que el ID en la URL coincida con el ID en la entidad
+            if (id != entidad.Id)
+            {
+                return BadRequest("Datos incorrectos");
+            }
+
+            // Buscar la cita existente en la base de datos
+            var citaExistente = await context.Citas
+                .Where(e => e.Id == id)
+                .FirstOrDefaultAsync();
+
             if (citaExistente == null)
             {
                 return NotFound("Cita no encontrada.");
             }
 
-            // Actualizamos los datos de la cita existente con los datos proporcionados
-            citaExistente.ClienteId = citaActualizada.ClienteId;
-            citaExistente.DisponibilidadId = citaActualizada.DisponibilidadId;
-            citaExistente.FechaDisponibilidad = citaActualizada.FechaDisponibilidad;
-            citaExistente.HoraDisponible = citaActualizada.HoraDisponible;
-            citaExistente.Estado = citaActualizada.Estado;
+            // Actualizar las propiedades de la cita existente con los datos proporcionados
+            citaExistente.ClienteId = entidad.ClienteId;
+            citaExistente.DisponibilidadId = entidad.DisponibilidadId;
+            citaExistente.FechaDisponibilidad = entidad.FechaDisponibilidad;
+            citaExistente.HoraDisponible = entidad.HoraDisponible;
+            citaExistente.Estado = entidad.Estado;
 
-            await context.SaveChangesAsync();
-            return Ok("Cita actualizada exitosamente.");
+            try
+            {
+                context.Citas.Update(citaExistente);
+                await context.SaveChangesAsync();
+                return Ok("Cita actualizada exitosamente.");
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // Elimina una cita específica por ID
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> EliminarCita(int id)
+        [HttpDelete("{id:int}")] // api/reservas/2
+        public async Task<ActionResult> EliminarCita(int id)
         {
-            var cita = await context.Citas.FindAsync(id);
-            if (cita == null)
+            // Verificar si existe una cita con el ID proporcionado
+            var existe = await context.Citas.AnyAsync(x => x.Id == id);
+            if (!existe)
             {
-                return NotFound("Cita no encontrada.");
+                return NotFound($"La cita con ID {id} no existe.");
             }
 
-            context.Citas.Remove(cita);
+            // Crear una instancia de Cita solo con el ID para eliminarla
+            Cita entidadABorrar = new Cita { Id = id };
+
+            context.Citas.Remove(entidadABorrar);
             await context.SaveChangesAsync();
             return Ok("Cita eliminada exitosamente.");
         }
+
 
         // Obtiene la disponibilidad de días y horarios (simulación)
         [HttpGet("disponibilidad")]
