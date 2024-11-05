@@ -11,6 +11,8 @@ namespace ProyectoOptica.BD.Data.Entity
     [Index(nameof(ClienteId), nameof(DisponibilidadId), Name = "Cita_UQ", IsUnique = true)]
     public class Cita : EntityBase
     {
+        
+
         [Required(ErrorMessage = "El usuario de la persona es obligatorio")]
         public int ClienteId { get; set; }
         public Cliente Clientes { get; set; }

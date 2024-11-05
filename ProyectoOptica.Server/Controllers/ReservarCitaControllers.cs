@@ -1,66 +1,89 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProyectoOptica.BD.Data;
 using ProyectoOptica.BD.Data.Entity;
 using ProyectoOptica.Shared.DTO;
 using System;
-
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ProyectoOptica.Server.Controllers
 {
-    /// <summary>
-    /// Controlador para gestionar todas las operaciones de reserva de citas.
-    /// </summary>
     [ApiController]
     [Route("api/reservas")]
     public class ReservarCitaControllers : ControllerBase
     {
-        public readonly Context context;
+        private readonly Context context;
+        private readonly IMapper mapper;
 
-        public   ReservarCitaControllers (Context context)
+        public ReservarCitaControllers(Context context, 
+                                       IMapper mapper)
         {
             this.context = context;
+            this.mapper = mapper;
         }
 
-        [HttpGet] //Es como el select en sql server
+        /*/* Método para obtener todas las citas
+        [HttpGet("todas")]
         public async Task<ActionResult<List<Cita>>> Get() // es de manera asincrona para optimizar el funcionamiento de las capas
         {
             return await context.Citas.ToListAsync();
-        }
+        }/*/
 
-        // Obtiene todas las citas
-        [HttpGet("Citas")]
-        public async Task<IActionResult> ObtenerTodasLasCitas()
+
+        // Método para listar citas usando ListaDeCitasDTO
+        [HttpGet("listadocitas")]
+        public async Task<ActionResult<IEnumerable<ListaDeCitasDTO>>> ListarCitas()
         {
-            var citas = await context.Citas
-                .Include(c => c.Clientes)
-                .Include(c => c.Disponibilidades)
-                .ToListAsync();
-            return Ok(citas);
+            try
+            {
+                var citas = await context.Citas
+                    .Include(c => c.Disponibilidades)
+                    .ThenInclude(d => d.Optometristas)
+                    .ToListAsync();
+
+                var listaCitasDTO = mapper.Map<List<ListaDeCitasDTO>>(citas);
+                return Ok(listaCitasDTO);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
-        // Obtiene una cita específica por ID  sin las entidades relacionadas
-        [HttpGet("{Id:int}")] 
+        // Método para obtener el detalle de una cita específica
+        [HttpGet("detalle/{id}")]
+        public async Task<ActionResult<DetalleCitaDTO>> ObtenerDetalleCita(int id)
+        {
+            try
+            {
+                var cita = await context.Citas
+                    .Include(c => c.Clientes)
+                    .Include(c => c.Disponibilidades)
+                    .ThenInclude(d => d.Optometristas)
+                    .FirstOrDefaultAsync(c => c.Id == id);
+
+                if (cita == null)
+                {
+                    return NotFound("La cita no existe.");
+                }
+
+                var detalleCitaDTO = mapper.Map<DetalleCitaDTO>(cita);
+                return Ok(detalleCitaDTO);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        // Método para obtener una cita específica por ID sin las entidades relacionadas
+        [HttpGet("{Id:int}")]
         public async Task<ActionResult<Cita>> Get(int Id)
         {
-            var Cita = await context.Citas
-                                    .FirstOrDefaultAsync(x => x.Id == Id);
-
-            if (Cita == null)
-            {
-                return NotFound("Cita no encontrada.");
-            }
-            return Ok(Cita);
-        }
-
-        // Obtiene la cita junto con la información de Clientes y Disponibilidades
-        [HttpGet("{id}")]
-        public async Task<IActionResult> ObtenerCitaPorId(int id)
-        {
-            var cita = await context.Citas
-                .Include(c => c.Clientes)
-                .Include(c => c.Disponibilidades)
-                .FirstOrDefaultAsync(c => c.Id == id);
+            var cita = await context.Citas.FirstOrDefaultAsync(x => x.Id == Id);
 
             if (cita == null)
             {
@@ -68,46 +91,37 @@ namespace ProyectoOptica.Server.Controllers
             }
             return Ok(cita);
         }
-        
+
+        // Resto del código sin cambios
+
+        // Método para crear una nueva cita
         [HttpPost]
         public async Task<ActionResult<int>> Post(CrearCitaDTO entidadDTO)
         {
             try
             {
-                // Crea una nueva instancia de Cita
-                Cita entidad = new Cita();
-
-                // Verificar si el cliente existe en la base de datos
                 var clienteExistente = await context.Clientes.FindAsync(entidadDTO.Clientes.Id);
                 if (clienteExistente == null)
                 {
                     return BadRequest("El cliente ingresado no existe en la base de datos.");
                 }
 
-                // Verificar si la disponibilidad existe en la base de datos
                 var disponibilidadExistente = await context.Disponibilidades.FindAsync(entidadDTO.Disponibilidades.Id);
                 if (disponibilidadExistente == null)
                 {
-                    return BadRequest("La disponibilidad proporcionada no existe .");
+                    return BadRequest("La disponibilidad proporcionada no existe.");
                 }
 
-                // Asignar los valores del DTO a la nueva entidad Cita
-                entidad.Clientes = clienteExistente;
-                entidad.Disponibilidades = disponibilidadExistente;
-                entidad.FechaDisponibilidad = entidadDTO.FechaDisponibilidad;
-                entidad.HoraDisponible = entidadDTO.HoraDisponible;
-                entidad.Estado = true; // Estado inicial por defecto
+                Cita nuevaEntidad = mapper.Map<Cita>(entidadDTO);
 
-                // Agregar la entidad al contexto y guardar los cambios
-                context.Citas.Add(entidad);
+                context.Citas.Add(nuevaEntidad);
                 await context.SaveChangesAsync();
 
-                // Devolver el ID de la nueva cita creada
-                return entidad.Id;
+                return nuevaEntidad.Id;
             }
-            catch (Exception e)
+            catch (Exception err)
             {
-                return BadRequest(e.Message);
+                return BadRequest(err.Message);
             }
         }
 
