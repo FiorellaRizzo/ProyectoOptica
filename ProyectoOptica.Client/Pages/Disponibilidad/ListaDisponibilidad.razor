@@ -1,0 +1,124 @@
+﻿@page "/api/Disponibilidad"
+@inject IHttpServicio http
+@using ProyectoOptica.BD.Data.Entity
+
+
+<h3>Lista de Disponibilidad</h3>
+
+<br />
+<a class="btn btn-primary" href="/api/disponibilidad/crear">Nueva Disponibilidad</a>
+<br />
+
+<br />
+<table>
+    <tr>
+        <th>Optometrista</th>
+        <th>Fecha</th>
+        <th>Hora</th>
+    </tr>
+    @if (Mensaje == "")
+    {
+        @if (listaDisponibilidad == null)
+        {
+            <p>Buscando....</p>
+        }
+        else if (listaDisponibilidad.Count == 0)
+        {
+            <p>No esa disponibilidad</p>
+        }
+
+        else
+        {
+            @foreach (var item in listaDisponibilidad)
+            {
+                <tr>                   
+                    <td>@item.Optometristas</td>
+                    <td>@item.FechaDisponibilidad</td>
+                    <td>@item.HoraDisponible</td>
+                    <a class="btn btn-primary"
+                       href="api/Cita/editar/@item.Id">
+                        Editar
+                    </a>
+                    <td>
+                        <button class="btn btn-danger"
+                                @onclick="()=>Eliminar(item)">
+                            Borrar
+                        </button>
+                    </td>
+                </tr>
+            }
+        }
+    }
+    else
+    {
+        <p> Error: @Mensaje</p>
+    }
+
+</table>
+
+
+<Confirmacion @ref="confirmacion"
+              Titulo="CUIDADO"
+              textCancelar="Salir"
+              onCancel="Cancelar"
+              onConfirm="Borrar">
+    <h5>Está por borrar el tipo de documento</h5>
+    <br />
+    <p>Está seguro?</p>
+</Confirmacion>
+
+
+@code {
+    Confirmacion confirmacion;
+
+    List<Disponibilidad> listaDisponibilidad;
+    Disponibilidad disponibilidad;
+    string Mensaje = "";
+
+    Disponibilidad? disponibilidadBorrar = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await Leer();
+    }
+
+    private async Task Leer()
+    {
+        var resp = await http.Get<List<Disponibilidad>>("api/Disponibilidad");
+        if (!resp.Error)
+        {
+            listaDisponibilidad = resp.Respuesta;
+        }
+        else
+        {
+            Mensaje = await resp.ObtenerError();
+        }
+    }
+
+    private async Task Eliminar(Disponibilidad disponibilidad)
+    {
+        disponibilidadBorrar = disponibilidad;
+        confirmacion.Ver();
+    }
+
+    private void Cancelar()
+    {
+        confirmacion.Ocultar();
+        disponibilidadBorrar = null;
+    }
+
+    private async Task Borrar()
+    {
+        var respuesta = await http.Delete($"api/Disponibilidad/{disponibilidadBorrar.Id}");
+        if (respuesta.Error)
+        {
+            var body = "No se pudo borrar";
+        }
+        Cancelar();
+        await Leer();
+    }
+
+    }
+
+

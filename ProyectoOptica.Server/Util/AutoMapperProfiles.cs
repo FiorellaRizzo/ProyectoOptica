@@ -12,11 +12,14 @@ namespace ProyectoOptica.Server.Util
         {
             CreateMap<CrearCitaDTO, Cita>();
 
-            // Mapper de Cita a DetalleCitaDTO
-            CreateMap<DetalleCitaDTO, Cita>();
-
             // Mapper de Cita a ListaDeCitasDTO
             CreateMap<ListaDeCitasDTO, Cita>();
+
+
+            CreateMap<CitaDTO, Cita>();
+
+
+            CreateMap<DisponibilidadDTO, Disponibilidad>();
         }
     }
 }

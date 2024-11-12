@@ -1,14 +1,15 @@
 ﻿using AutoMapper;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProyectoOptica.BD.Data;
-using ProyectoOptica.BD.Data.Entity;
-using ProyectoOptica.Server.Repositorio;
-using ProyectoOptica.Shared.DTO;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ProyectoOptica.BD;
+using Microsoft.AspNetCore.Mvc;
+using ProyectoOptica.BD.Data.Entity;
+using ProyectoOptica.Server.Repositorio;
+using ProyectoOptica.Shared.DTO;
 
 namespace ProyectoOptica.Server.Controllers
 {
@@ -16,144 +17,110 @@ namespace ProyectoOptica.Server.Controllers
     [Route("api/reservas")]
     public class ReservarCitaControllers : ControllerBase
     {
-        private readonly IReservarCitaRepositorio repositorio;
-        private readonly IMapper mapper;
+        private readonly ICitaRepositorio repositorioCita;
+        private readonly IClienteRepositorio repositorioCliente;
+        private readonly IDisponibilidadRepositorio repositorioDisponibilidad;
 
-        public ReservarCitaControllers( IReservarCitaRepositorio repositorio,
-                                        IMapper mapper)
+        public ReservarCitaControllers(ICitaRepositorio repositorioCita,
+                                   IClienteRepositorio repositorioCliente,
+                                   IDisponibilidadRepositorio repositorioDisponibilidad)
         {
-            this.repositorio = repositorio;
-            this.mapper = mapper;
+            this.repositorioCita = repositorioCita;
+            this.repositorioCliente = repositorioCliente;
+            this.repositorioDisponibilidad = repositorioDisponibilidad;
         }
 
-        // Método para obtener todas las citas
-        [HttpGet]
-        public async Task<ActionResult<List<Cita>>> Get() // es de manera asincrona para optimizar el funcionamiento de las capas
+        [HttpGet("GetCitas")]
+        public async Task<ActionResult<List<Cita>>> GetCita()
         {
-            return await repositorio.Select();
-                
+            return await repositorioCita.Select();
         }
 
 
-        
-
-        [HttpGet("{id:int}")] //api/Reserva/2
-        public async Task<ActionResult<Cita>> Get(int id)
+        [HttpGet("GetCliente")]
+        public async Task<ActionResult<List<Cliente>>> GetCliente()
         {
+            return await repositorioCliente.Select();
+        }
 
-            Cita? cita = await repositorio.SelectById(id);
-           if (cita == null)
-           {
-                return NotFound("Cita no encontrada.");
-           }
-            return cita;
-        }         
-                
-        // Método para crear una nueva cita
-       [HttpPost]
-       public async Task<ActionResult<int>> Post(CrearCitaDTO entidadDTO)
-       {
+        [HttpGet("GetDisponibilidad")]
+        public async Task<ActionResult<List<Disponibilidad>>> GetDisponibilidad()
+        {
+            return await repositorioDisponibilidad.Select();
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<int>> Post(CrearCita_DisponibilidadDTO entidadDTO)
+        {
             try
             {
-                // Verificar si el cliente existe
-                var clienteExistente = await repositorio.ObtenerClientePorIdAsync(entidadDTO.Clientes.Id);
-                if (clienteExistente == null)
+                // Verificar si el optometrista está disponible en la fecha y hora seleccionadas
+                var disponibilidadExistente = await repositorioDisponibilidad.SelectByFechaHora(entidadDTO.OptometristaId, entidadDTO.FechaDisponibilidad, entidadDTO.HoraDisponible);
+                if (disponibilidadExistente == null || !disponibilidadExistente.Estado)
                 {
-                    return BadRequest("El cliente ingresado no existe en la base de datos.");
+                    return BadRequest("El optometrista no está disponible en la fecha y hora seleccionadas.");
                 }
 
-                // Verificar si la disponibilidad existe
-                var disponibilidadExistente = await repositorio.ObtenerDisponibilidadPorIdAsync(entidadDTO.Disponibilidades.Id);
-                if (disponibilidadExistente == null)
+                // Verificar si ya existe una cita en la misma fecha y hora para el cliente
+                var citaExistente = await repositorioCita.SelectByFechaHora(entidadDTO.ClienteId, entidadDTO.FechaCita, entidadDTO.HoraCita);
+                if (citaExistente != null)
                 {
-                    return BadRequest("La disponibilidad proporcionada no existe.");
+                    return BadRequest($"El cliente ya tiene una cita programada en la fecha y hora seleccionadas.");
                 }
 
-                // Mapear el DTO a la entidad Cita
-                var entidad = mapper.Map<Cita>(entidadDTO);
-                entidad.Clientes = clienteExistente;
-                entidad.Disponibilidades = disponibilidadExistente;
+                // Crear la entidad Cita a partir del DTO
+                Cita nuevaCita = new Cita
+                {
+                    ClienteId = entidadDTO.ClienteId,
+                    DisponibilidadId = disponibilidadExistente.Id,
+                    FechaDisponibilidad = entidadDTO.FechaCita,
+                    HoraDisponible = entidadDTO.HoraCita,
+                    Estado = entidadDTO.EstadoCita
+                };
 
+                int citaId = await repositorioCita.Insert(nuevaCita);
+                if (citaId == 0)
+                {
+                    return BadRequest("No se pudo crear la cita.");
+                }
 
-                return await repositorio.Insert(entidad);
-            }
-            catch (Exception err)
-            {
-                return BadRequest(err.Message);
-            }
-        }
+                // Actualizar la disponibilidad para marcarla como reservada
+                disponibilidadExistente.Estado = false;
+                await repositorioDisponibilidad.update(disponibilidadExistente.Id, disponibilidadExistente);
 
-
-
-        // Actualiza una cita existente
-        [HttpPut("{id:int}")] // api/reservas/2
-        public async Task<ActionResult> ActualizarCita(int id, [FromBody] Cita entidad)
-        {
-            // Verificar que el ID en la URL coincida con el ID en la entidad
-            if (id != entidad.Id)
-            {
-                return BadRequest("Datos incorrectos");
-            }
-
-            // Buscar la cita existente en la base de datos
-            var citaExistente = await repositorio.SelectById(id);
-                
-
-            if (citaExistente == null)
-            {
-                return NotFound("Cita no encontrada.");
-            }
-
-            // Actualizar las propiedades de la cita existente con los datos proporcionados
-            citaExistente.ClienteId = entidad.ClienteId;
-            citaExistente.DisponibilidadId = entidad.DisponibilidadId;
-            citaExistente.FechaDisponibilidad = entidad.FechaDisponibilidad;
-            citaExistente.HoraDisponible = entidad.HoraDisponible;
-            citaExistente.Estado = entidad.Estado;
-
-            try
-            {
-                await repositorio.update(id, citaExistente);
-               
-                return Ok("Cita actualizada exitosamente.");
+                return Ok(citaId);
             }
             catch (Exception e)
             {
                 return BadRequest(e.Message);
             }
         }
-
-        // Elimina una cita específica por ID
-        [HttpDelete("{id:int}")] // api/reservas/2
-        public async Task<ActionResult> EliminarCita(int id)
-        {
-            // Verificar si existe una cita con el ID proporcionado
-            var existe = await repositorio.Existe(id);
-
-            if (!existe)
-            {
-                return NotFound($"La cita con ID {id} no existe.");
-            }
-
-
-
-            if (await repositorio.Borrar(id))
-            {
-                return Ok("Cita eliminada exitosamente.");
-            }
-            else
-            {
-                return BadRequest();
-            }
-
-        }
-
-        
     }
-
 }
+    
 
 
 
-       
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     

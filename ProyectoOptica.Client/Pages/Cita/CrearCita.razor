@@ -1,0 +1,63 @@
+﻿@page "/api/cita/crear"
+@inject IHttpServicio http
+@inject NavigationManager navigationManager
+<h3>Nueva Cita</h3>
+
+<EditForm Model="cita" OnValidSubmit="Grabar">
+    <DataAnnotationsValidator />
+    <div class="form-group">
+        <label>ClienteID</label>
+        <div>
+            <InputNumber class="form-control" @bind-Value="@cita.ClienteId" />
+            <ValidationMessage For="@(() => cita.ClienteId)" />
+        </div>
+    </div>
+
+    
+        <div class="form-group">
+        <label>DisponibilidadID</label>
+        <div>
+            <InputNumber class="form-control" @bind-Value="@cita.DisponibilidadId" />
+            <ValidationMessage For="@(() => cita.DisponibilidadId)" />
+        </div>
+    </div>
+
+        <div class="form-group">
+            <label>Fecha de Disponibilidad</label>
+            <div>
+                <InputDate class="form-control" @bind-Value="@cita.FechaDisponibilidad" />
+                <ValidationMessage For="@(() => cita.FechaDisponibilidad)" />
+        </div>
+    </div>
+
+        <div class="form-group">
+            <label>Horario Disponible</label>
+            <div>
+                <InputDate class="form-control" @bind-Value="@cita.HoraDisponible" />
+                <ValidationMessage For="@(() => cita.HoraDisponible)" />
+            </div>
+    </div>
+    <br />
+    <button class="btn btn-primary" type="submit">Aceptar</button>
+    <button class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
+</EditForm>
+
+@code {
+    private Cita cita = new Cita();
+
+    private async Task Grabar()
+    {
+        var httpRespuesta = await http.Post<Cita>("api/cita", cita);
+        if (httpRespuesta.Error)
+        {
+            var body = httpRespuesta.HttpResponseMessage;
+        }
+        navigationManager.NavigateTo("/api/cita");
+    }
+
+    private void Cancelar()
+    {
+        navigationManager.NavigateTo("/api/cita");
+    }
+
+}

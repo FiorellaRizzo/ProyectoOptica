@@ -30,18 +30,20 @@ builder.Services.AddScoped<ITDocumentoRepositorio,TDocumentoRepositorio>();
 builder.Services.AddScoped<IClienteRepositorio, ClienteRepositorio>();
 builder.Services.AddScoped<IDisponibilidadRepositorio, DisponibilidadRepositorio>();
 builder.Services.AddScoped<IOptometristaRepositorio, OptometristaRepositorio>();
-
+builder.Services.AddScoped<ICitaRepositorio, CitaRepositorio>();
 
 
 //CONSTRUCCION DE LA APLICACION
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+//if (app.Environment.IsDevelopment())
+//{
+//    app.UseSwagger();
+//    app.UseSwaggerUI();
+//}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 app.UseBlazorFrameworkFiles();

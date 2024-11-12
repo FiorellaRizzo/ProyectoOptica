@@ -21,7 +21,7 @@ namespace ProyectoOptica.BD.Data.Entity
         [MaxLength(100, ErrorMessage = "Maximo numero de caracteres {1}.")]
         public string Nombre { get; set; }
 
-
+        public List<Persona> Personas { get; set; } = new List<Persona>(); 
     }
 }
 

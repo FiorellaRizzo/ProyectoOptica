@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProyectoOptica.BD", "Proyec
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProyectoOptica.Shared", "ProyectoOptica.Shared\ProyectoOptica.Shared.csproj", "{B19A1652-D82B-4894-8DA3-A7BF38DCE87C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProyectoOptica.Client", "ProyectoOptica.Client\ProyectoOptica.Client.csproj", "{D9820CA4-6AEB-48C3-8737-F418A18E7072}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProyectoOptica.Client", "ProyectoOptica.Client\ProyectoOptica.Client.csproj", "{D9820CA4-6AEB-48C3-8737-F418A18E7072}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

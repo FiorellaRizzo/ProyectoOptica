@@ -1,0 +1,92 @@
+﻿@page "/api/Disponibilidad/editar/{disponibilidadId:int}"
+@inject IHttpServicio http
+@inject NavigationManager navigationManager
+
+
+<h3>Editar Cita</h3>
+
+<EditForm Model="disponibilidad" OnValidSubmit="Grabar">
+    <DataAnnotationsValidator />
+    <div class="form-group">
+        <label>DisponibilidadID</label>
+        <div>
+            <InputNumber class="form-control" @bind-Value="@disponibilidad.IdDisponibilidad" />
+            <ValidationMessage For="@(() => disponibilidad.IdDisponibilidad)" />
+        </div>
+    </div>
+
+
+    <div class="form-group">
+        <label>DisponibilidadID</label>
+        <div>
+            <InputNumber class="form-control" @bind-Value="@disponibilidad.IdDisponibilidad" />
+            <ValidationMessage For="@(() => disponibilidad.IdDisponibilidad)" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Fecha de Disponibilidad</label>
+        <div>
+            <InputDate class="form-control" @bind-Value="@disponibilidad.FechaDisponibilidad" />
+            <ValidationMessage For="@(() => disponibilidad.FechaDisponibilidad)" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Horario Disponible</label>
+        <div>
+            <InputDate class="form-control" @bind-Value="@disponibilidad.HoraDisponible" />
+            <ValidationMessage For="@(() => disponibilidad.HoraDisponible)" />
+        </div>
+    </div>
+    <br />
+    <button class="btn btn-primary" type="submit">Aceptar</button>
+    <button class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
+</EditForm>
+
+
+
+@code {
+    [Parameter] public int disponibilidadId { get; set; }
+    private Disponibilidad disponibilidad = new Disponibilidad();
+
+    string pepe = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await Mostrar();
+    }
+
+    private async Task Mostrar()
+    {
+        var respuesta = await http.Get<Disponibilidad>($"api/Disponibilidad/{disponibilidadId}");
+
+        if (!respuesta.Error)
+        {
+            disponibilidad = respuesta.Respuesta;
+        }
+        else
+        {
+            navigationManager.NavigateTo("/api/Disponibilidad");
+        }
+    }
+
+
+    private async Task Grabar()
+    {
+        
+
+        var httpRespuesta = await http.Put<Disponibilidad>($"api/Disponibilidad/{disponibilidadId}", disponibilidad);
+        if (httpRespuesta.Error)
+        {
+            var body = httpRespuesta.HttpResponseMessage;
+        }
+        navigationManager.NavigateTo("/api/Disponibilidad");
+    }
+
+    private void Cancelar()
+    {
+        navigationManager.NavigateTo("/api/Disponibilidad");
+    }
+}
