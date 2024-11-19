@@ -20,6 +20,11 @@ namespace ProyectoOptica.Server.Util
 
 
             CreateMap<DisponibilidadDTO, Disponibilidad>();
+
+           
+            CreateMap<CrearDisponibilidadDTO, Disponibilidad>()
+                    .ForMember(dest => dest.IdDisponibilidad, opt => opt.Ignore());
+
         }
     }
 }

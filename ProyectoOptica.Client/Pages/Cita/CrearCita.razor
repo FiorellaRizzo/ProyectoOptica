@@ -1,63 +1,95 @@
-﻿@page "/api/cita/crear"
+﻿@page "/api/Cita/crear"
 @inject IHttpServicio http
 @inject NavigationManager navigationManager
-<h3>Nueva Cita</h3>
+@using ProyectoOptica.Shared
+@using ProyectoOptica.Shared.DTO
+
+
+<h3>Crear Nueva Cita</h3>
 
 <EditForm Model="cita" OnValidSubmit="Grabar">
     <DataAnnotationsValidator />
     <div class="form-group">
-        <label>ClienteID</label>
-        <div>
-            <InputNumber class="form-control" @bind-Value="@cita.ClienteId" />
-            <ValidationMessage For="@(() => cita.ClienteId)" />
-        </div>
+        <label>Cliente ID</label>
+        <InputNumber class="form-control" @bind-Value="@cita.ClienteId" />
+        <ValidationMessage For="@(() => cita.ClienteId)" />
     </div>
 
-    
-        <div class="form-group">
-        <label>DisponibilidadID</label>
-        <div>
-            <InputNumber class="form-control" @bind-Value="@cita.DisponibilidadId" />
-            <ValidationMessage For="@(() => cita.DisponibilidadId)" />
-        </div>
+    <div class="form-group">
+        <label>Disponibilidad ID</label>
+        <InputNumber class="form-control" @bind-Value="@cita.DisponibilidadId" />
+        <ValidationMessage For="@(() => cita.DisponibilidadId)" />
     </div>
 
-        <div class="form-group">
-            <label>Fecha de Disponibilidad</label>
-            <div>
-                <InputDate class="form-control" @bind-Value="@cita.FechaDisponibilidad" />
-                <ValidationMessage For="@(() => cita.FechaDisponibilidad)" />
-        </div>
+    <div class="form-group">
+        <label>Fecha de Disponibilidad</label>
+        <InputDate class="form-control" @bind-Value="@cita.FechaDisponibilidad" />
+        <ValidationMessage For="@(() => cita.FechaDisponibilidad)" />
     </div>
 
-        <div class="form-group">
-            <label>Horario Disponible</label>
-            <div>
-                <InputDate class="form-control" @bind-Value="@cita.HoraDisponible" />
-                <ValidationMessage For="@(() => cita.HoraDisponible)" />
-            </div>
+
+    <div class="form-group">
+        <label>Hora de la Cita disponible</label>
+        <InputText class="form-control" @bind-Value="HoraDisponible" />
+        <ValidationMessage For="@(() => HoraDisponible)" />
     </div>
-    <br />
+
     <button class="btn btn-primary" type="submit">Aceptar</button>
     <button class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
 </EditForm>
 
 @code {
-    private Cita cita = new Cita();
+    private CrearCitaDTO cita = new CrearCitaDTO();
 
+    // Propiedad para enlazar al InputText (Hora de la Cita)
+    private string HoraDisponible
+    {
+        get => MiTimeSpan.ToString(@"hh\:mm"); // Convierte TimeSpan a formato de hora
+        set
+        {
+            if (!string.IsNullOrEmpty(value))
+            {
+                if (TimeSpan.TryParse(value, out var timeSpan))
+                {
+                    MiTimeSpan = timeSpan;
+                }
+            }
+        }
+    }
+
+    private TimeSpan MiTimeSpan { get; set; }
+
+    // Método para guardar la cita
     private async Task Grabar()
     {
-        var httpRespuesta = await http.Post<Cita>("api/cita", cita);
+        if (cita.FechaDisponibilidad == DateTime.MinValue)
+        {
+            Console.WriteLine("La fecha de la cita es inválida.");
+            return;
+        }
+
+        if (MiTimeSpan == TimeSpan.Zero)
+        {
+            Console.WriteLine("La hora de la cita no puede ser 00:00.");
+            return;
+        }
+
+        cita.HoraDisponible = MiTimeSpan; // Asignar el TimeSpan al modelo
+
+        var httpRespuesta = await http.Post<CrearCitaDTO>("api/Cita", cita);
         if (httpRespuesta.Error)
         {
-            var body = httpRespuesta.HttpResponseMessage;
+            Console.WriteLine($"Error: {httpRespuesta.HttpResponseMessage}");
         }
-        navigationManager.NavigateTo("/api/cita");
+        else
+        {
+            navigationManager.NavigateTo("/api/Cita");
+        }
     }
 
+    // Método para cancelar y regresar a la lista de citas
     private void Cancelar()
     {
-        navigationManager.NavigateTo("/api/cita");
+        navigationManager.NavigateTo("/api/Cita");
     }
-
 }

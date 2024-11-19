@@ -19,7 +19,7 @@ namespace ProyectoOptica.BD.Data.Entity
         public DateTime FechaDisponibilidad { get; set; }
 
         [Required(ErrorMessage = "Colocar los horarios que tenga disponible")]
-        public DateTime HoraDisponible { get; set; }
+        public TimeSpan HoraDisponible { get; set; }
 
         public bool Estado { get; set; } = true; // Indica si está disponible o no
     }

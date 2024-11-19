@@ -15,7 +15,7 @@ namespace ProyectoOptica.Client.Servicios
             this.http = http;
         }
 
-        public async Task<HttpRespuesta<T>> Get<T>(string url) //https://localhost:7040/api/cita
+        public async Task<HttpRespuesta<T>> Get<T>(string url) //https://localhost:7063/api/cita
         {
             var response = await http.GetAsync(url);
 

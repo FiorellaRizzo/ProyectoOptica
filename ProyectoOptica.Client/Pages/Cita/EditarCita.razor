@@ -17,8 +17,8 @@
         </div>
     </div>
 
-    
-        <div class="form-group">
+
+    <div class="form-group">
         <label>DisponibilidadID</label>
         <div>
             <InputNumber class="form-control" @bind-Value="@cita.DisponibilidadId" />
@@ -26,20 +26,20 @@
         </div>
     </div>
 
-        <div class="form-group">
-            <label>Fecha de Disponibilidad</label>
-            <div>
-                <InputDate class="form-control" @bind-Value="@cita.FechaDisponibilidad" />
-                <ValidationMessage For="@(() => cita.FechaDisponibilidad)" />
+    <div class="form-group">
+        <label>Fecha de Disponibilidad</label>
+        <div>
+            <InputDate class="form-control" @bind-Value="@cita.FechaDisponibilidad" />
+            <ValidationMessage For="@(() => cita.FechaDisponibilidad)" />
         </div>
     </div>
 
-        <div class="form-group">
-            <label>Horario Disponible</label>
-            <div>
-                <InputDate class="form-control" @bind-Value="@cita.HoraDisponible" />
-                <ValidationMessage For="@(() => cita.HoraDisponible)" />
-            </div>
+    <div class="form-group">
+        <label>Horario Disponible</label>
+        <div>
+            <InputNumber class="form-control" @bind-Value="@cita.HoraDisponible" />
+            <ValidationMessage For="@(() => cita.HoraDisponible)" />
+        </div>
     </div>
     <br />
     <button class="btn btn-primary" type="submit">Aceptar</button>
@@ -47,7 +47,7 @@
 </EditForm>
 
 @code {
-    [Parameter] public int citaId{ get; set; }
+    [Parameter] public int citaId { get; set; }
     private Cita cita = new Cita();
 
     string pepe = "";

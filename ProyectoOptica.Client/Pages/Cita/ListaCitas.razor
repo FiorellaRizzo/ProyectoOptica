@@ -1,4 +1,4 @@
-﻿@page "/api/Cita"
+﻿  @page "/api/Cita"
 @inject IHttpServicio http
 @using ProyectoOptica.BD.Data.Entity
 
@@ -87,7 +87,7 @@
 
         private async Task Leer()
         {
-            var resp = await http.Get<List<Cita>>("api/cita");
+            var resp = await http.Get<List<Cita>>("/api/Cita");
             if (!resp.Error)
             {
                 listaCitas = resp.Respuesta;
@@ -112,7 +112,7 @@
 
         private async Task Borrar()
         {
-            var respuesta = await http.Delete($"api/cita/{citaBorrar.Id}");
+            var respuesta = await http.Delete($"api/Cita/{citaBorrar.Id}");
             if (respuesta.Error)
             {
                 var body = "No se pudo borrar";
@@ -122,12 +122,4 @@
         }
 
     }
-
-
-
-
-
-
-
-
-
+ 

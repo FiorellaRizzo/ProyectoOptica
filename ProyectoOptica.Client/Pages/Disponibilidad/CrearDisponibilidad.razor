@@ -1,63 +1,94 @@
 ﻿@page "/api/Disponibilidad/crear"
+@using ProyectoOptica.Shared.DTO
 @inject IHttpServicio http
 @inject NavigationManager navigationManager
-<h3>Nueva Disponibilidad</h3>
+
+<h3>Crear Nueva Disponibilidad</h3>
 
 <EditForm Model="disponibilidad" OnValidSubmit="Grabar">
     <DataAnnotationsValidator />
+
+    <!-- Campo para OptometristaId -->
     <div class="form-group">
-        <label>DisponibilidadID</label>
-        <div>
-            <InputNumber class="form-control" @bind-Value="@disponibilidad.IdDisponibilidad" />
-            <ValidationMessage For="@(() => disponibilidad.IdDisponibilidad)" />
-        </div>
+        <label>Optometrista ID</label>
+        <InputNumber class="form-control" @bind-Value="@disponibilidad.OptometristaId" />
+        <ValidationMessage For="@(() => disponibilidad.OptometristaId)" />
     </div>
 
-
     <div class="form-group">
-        <label>DisponibilidadID</label>
-        <div>
-            <InputNumber class="form-control" @bind-Value="@disponibilidad.IdDisponibilidad" />
-            <ValidationMessage For="@(() => disponibilidad.IdDisponibilidad)" />
-        </div>
+        <label>Disponibilidad ID</label>
+        <InputNumber class="form-control" @bind-Value="@disponibilidad.IdDisponibilidad" />
+        <ValidationMessage For="@(() => disponibilidad.IdDisponibilidad)" />
     </div>
 
     <div class="form-group">
         <label>Fecha de Disponibilidad</label>
-        <div>
-            <InputDate class="form-control" @bind-Value="@disponibilidad.FechaDisponibilidad" />
-            <ValidationMessage For="@(() => disponibilidad.FechaDisponibilidad)" />
-        </div>
+        <InputDate class="form-control" @bind-Value="@disponibilidad.FechaDisponibilidad" />
+        <ValidationMessage For="@(() => disponibilidad.FechaDisponibilidad)" />
     </div>
 
     <div class="form-group">
-        <label>Horario Disponible</label>
-        <div>
-            <InputDate class="form-control" @bind-Value="@disponibilidad.HoraDisponible" />
-            <ValidationMessage For="@(() => disponibilidad.HoraDisponible)" />
-        </div>
+        <label>Hora Disponible</label>
+        <InputText class="form-control" @bind-Value="HoraDisponible" />
+        <ValidationMessage For="@(() => HoraDisponible)" />
     </div>
-    <br />
+
     <button class="btn btn-primary" type="submit">Aceptar</button>
     <button class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
 </EditForm>
 
 @code {
-    private Disponibilidad disponibilidad = new Disponibilidad();
+    private CrearDisponibilidadDTO disponibilidad = new CrearDisponibilidadDTO();
 
-    private async Task Grabar()
+    // Propiedad para enlazar al InputText (Hora Disponible)
+    private string HoraDisponible
     {
-        var httpRespuesta = await http.Post<Disponibilidad>("api/Disponibilidad", disponibilidad);
-        if (httpRespuesta.Error)
+        get => MiTimeSpan.ToString(@"hh\:mm"); // Convierte TimeSpan a formato de hora
+        set
         {
-            var body = httpRespuesta.HttpResponseMessage;
+            if (!string.IsNullOrEmpty(value))
+            {
+                if (TimeSpan.TryParse(value, out var timeSpan))
+                {
+                    MiTimeSpan = timeSpan;
+                }
+            }
         }
-        navigationManager.NavigateTo("/api/Disponibilidad");
     }
 
+    private TimeSpan MiTimeSpan { get; set; }
+
+    // Método para guardar la disponibilidad
+    private async Task Grabar()
+    {
+        if (disponibilidad.FechaDisponibilidad == DateTime.MinValue)
+        {
+            Console.WriteLine("La fecha de disponibilidad es inválida.");
+            return;
+        }
+
+        if (MiTimeSpan == TimeSpan.Zero)
+        {
+            Console.WriteLine("La hora disponible no puede ser 00:00.");
+            return;
+        }
+
+        disponibilidad.HoraDisponible = MiTimeSpan; // Asignar el TimeSpan al modelo
+
+        var httpRespuesta = await http.Post<CrearDisponibilidadDTO>("api/Disponibilidad", disponibilidad);
+        if (httpRespuesta.Error)
+        {
+            Console.WriteLine($"Error: {httpRespuesta.HttpResponseMessage}");
+        }
+        else
+        {
+            navigationManager.NavigateTo("/api/Disponibilidad");
+        }
+    }
+
+    // Método para cancelar y regresar a la lista de disponibilidades
     private void Cancelar()
     {
         navigationManager.NavigateTo("/api/Disponibilidad");
     }
-
 }

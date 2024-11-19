@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using ProyectoOptica.BD.Data;
 using ProyectoOptica.Server.Repositorio;
+using ProyectoOptica.Server.Util;
 using System.Text.Json.Serialization;
 
 //CONFIGURACION DE LOS SERVICIOS EN EL CONSTRUCTOR DE LA APLICACION
@@ -21,6 +22,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<Context>(op => op.UseSqlServer("name=conn"));
 
 builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddAutoMapper(typeof(AutoMapperProfiles));
+
 
 builder.Services.AddScoped<IReservarCitaRepositorio, ReservarCitaRepositorio>();
 

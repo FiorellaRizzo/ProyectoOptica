@@ -10,7 +10,10 @@ namespace ProyectoOptica.Shared.DTO
 {
     public class CrearCitaDTO
     {
-    
+        
+        public DateTime FechaCita { get; set; }
+        public TimeSpan HoraCita { get; set; }
+
         [Required(ErrorMessage = "El ID del cliente es obligatorio")]
         public int ClienteId { get; set; }
 

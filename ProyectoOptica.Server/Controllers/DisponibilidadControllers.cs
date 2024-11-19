@@ -9,6 +9,7 @@ using ProyectoOptica.Shared.DTO;
 namespace ProyectoOptica.Server.Controllers
 {
     [ApiController]
+    
     [Route("api/Disponibilidad")]
     public class DisponibilidadController : ControllerBase
     {
@@ -41,6 +42,72 @@ namespace ProyectoOptica.Server.Controllers
         }
 
         // Crear una nueva disponibilidad
+
+        /*[HttpPost("crear")]
+        public async Task<ActionResult<int>> CrearDisponibilidad([FromBody] CrearDisponibilidadDTO crearDisponibilidadDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                // Ignorar el Id si no debe ser utilizado
+                crearDisponibilidadDto.IdDisponibilidad = 0;
+
+                var disponibilidad = mapper.Map<Disponibilidad>(crearDisponibilidadDto);
+
+                var disponibilidadId = await repositorio.Insert(disponibilidad);
+                return Ok(disponibilidadId);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }*/
+
+
+
+
+
+        /*[HttpPost("crear")]
+        public async Task<ActionResult<int>> CrearDisponibilidad([FromBody] CrearDisponibilidadDTO crearDisponibilidadDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState); // Retorna errores de validación al cliente
+                }
+
+                var disponibilidad = mapper.Map<Disponibilidad>(crearDisponibilidadDto);
+                var disponibilidadId = await repositorio.Insert(disponibilidad);
+                return Ok(disponibilidadId);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }*/
+
+
+        /*[HttpPost("crear")] // Cambiar la ruta del endpoint
+        public async Task<ActionResult<int>> Post(CrearDisponibilidadDTO crearDisponibilidadDto)
+        {
+            try
+            {
+                var disponibilidad = mapper.Map<Disponibilidad>(crearDisponibilidadDto);
+                var disponibilidadId = await repositorio.Insert(disponibilidad);
+                return Ok(disponibilidadId);
+            }
+            catch (Exception err)
+            {
+                return BadRequest(err.Message);
+            }
+        }*/
+
+
         [HttpPost] // api/Disponibilidad
         public async Task<ActionResult<int>> Post(CrearDisponibilidadDTO crearDisponibilidadDto)
         {
@@ -55,6 +122,19 @@ namespace ProyectoOptica.Server.Controllers
                 return BadRequest(err.Message);
             }
         }
+
+        /*[HttpPost]
+        public async Task<ActionResult<int>> Post(Disponibilidad entidad)
+        {
+            try
+            {
+                return await repositorio.Insert(entidad);
+            }
+            catch (Exception err)
+            {
+                return BadRequest(err.Message);
+            }
+        }*/
 
         // Verificar si una disponibilidad existe por ID
         [HttpGet("existe/{id:int}")] // api/Disponibilidad/existe/2
