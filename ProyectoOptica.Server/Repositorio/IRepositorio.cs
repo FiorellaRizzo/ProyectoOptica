@@ -1,11 +1,16 @@
-﻿using ProyectoOptica.BD.Data;
+﻿
+using ProyectoOptica.BD.Data;
 
-public interface IRepositorio<E> where E : class, IEntityBase
+namespace ProyectoOptica.Server.Repositorio
 {
-    Task<bool> Borrar(int id);
-    Task<bool> Existe(int id);
-    Task<int> Insert(E entidad);
-    Task<List<E>> Select();
-    Task<E> SelectById(int id);
-    Task<bool> update(int id, E entidad);
+    public interface IRepositorio<E> where E : class, IEntityBase
+    {
+        Task<bool> Existe(int id);
+        Task<List<E>> Select();
+        Task<E?> SelectById(int id);
+        Task<int> Insert(E entidad);
+        Task<bool> Update(int id, E entidad);
+        Task<bool> Borrar(int id);
+    }
+
 }

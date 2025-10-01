@@ -3,10 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using ProyectoOptica.BD.Data;
 using ProyectoOptica.BD.Data.Entity;
+using ProyectoOptica.Server.Repositorio;
 using ProyectoOptica.Shared.DTO;
 
-public class Repositorio<E> : IRepositorio<E> 
-             where E : class, IEntityBase
+public class Repositorio<E> : IRepositorio<E>
+        where E : class, IEntityBase
 {
     private readonly Context context;
 
@@ -17,88 +18,50 @@ public class Repositorio<E> : IRepositorio<E>
 
     public async Task<bool> Existe(int id)
     {
-        var existe = await context.Set<E>()
-                         .AnyAsync(x => x.Id == id);
-        return existe;
+        return await context.Set<E>().AnyAsync(x => x.Id == id);
     }
-
 
     public async Task<List<E>> Select()
     {
-        return await context.Set<E>().ToListAsync();
+        return await context.Set<E>().AsNoTracking().ToListAsync();
     }
 
-    //Es como get por Id
-    public async Task<E> SelectById(int id)
+    public async Task<E?> SelectById(int id)
     {
-        E? CitaId = await context.Set<E>()
+        return await context.Set<E>()
             .AsNoTracking()
-            .FirstOrDefaultAsync(
-            x => x.Id == id);
-        return CitaId;
+            .FirstOrDefaultAsync(x => x.Id == id);
     }
 
     public async Task<int> Insert(E entidad)
     {
-        try
-        {
-            await context.Set<E>().AddAsync(entidad);
-            await context.SaveChangesAsync();
-            return entidad.Id;
-        }
-        catch (Exception err)
-        {
-            throw err;
-        }
+        await context.Set<E>().AddAsync(entidad);
+        await context.SaveChangesAsync();
+        return entidad.Id;
     }
 
-
-    public async Task<bool> update(int id, E entidad)
+    public async Task<bool> Update(int id, E entidad)
     {
+        if (id != entidad.Id) return false;
 
-        if (id != entidad.Id)
-        {
-            return false;
-        }
+        var existente = await context.Set<E>()
+                                     .AsNoTracking()
+                                     .FirstOrDefaultAsync(x => x.Id == id);
+        if (existente is null) return false;
 
-
-        var citaExistente = await SelectById(id);
-
-        if (citaExistente == null)
-        {
-            return false;
-        }
-
-        try
-        {
-            context.Set<E>().Update(entidad);
-            await context.SaveChangesAsync();
-            return true;
-        }
-        catch (Exception e)
-        {
-            throw e;
-        }
-    }
-
-    public async Task<bool> Borrar(int id)
-    {
-        var CitaExistente = await SelectById(id);
-
-        if (CitaExistente == null)
-        {
-            return false;
-        }
-
-        var existe = await Existe(id);
-        if (!existe)
-        {
-            return false;
-        }
-
-        context.Set<E>().Remove(CitaExistente);
+        context.Set<E>().Update(entidad);
         await context.SaveChangesAsync();
         return true;
     }
 
+    public async Task<bool> Borrar(int id)
+    {
+        var existente = await context.Set<E>().FirstOrDefaultAsync(x => x.Id == id);
+        if (existente is null) return false;
+
+        context.Set<E>().Remove(existente);
+        await context.SaveChangesAsync();
+        return true;
+    }
 }
+

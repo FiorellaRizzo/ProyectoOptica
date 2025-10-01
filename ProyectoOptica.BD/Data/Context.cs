@@ -1,30 +1,17 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ProyectoOptica.BD.Data.Entity;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+
+
 
 namespace ProyectoOptica.BD.Data
 {
-    public class Context : DbContext
+    public class Context : IdentityDbContext
     {
-        public DbSet<Usuario> Usuarios { get; set; }
+       
+        public DbSet<Turno> Turnos { get; set; }
 
-        public DbSet<TDocumento> TDocumentos { get; set; }
-
-        public DbSet<Persona> Personas { get; set; }
-
-        public DbSet<Cliente> Clientes { get; set; }
-
-        public DbSet<Optometrista> Optometristas { get; set; }
-
-        public DbSet<Cita> Citas { get; set; }
-
-        public DbSet<Disponibilidad> Disponibilidades { get; set; }
-
-
+        public DbSet<Reserva> Reservas { get; set; }
 
         public Context(DbContextOptions options) : base(options)
         {
@@ -42,9 +29,21 @@ namespace ProyectoOptica.BD.Data
                 fk.DeleteBehavior = DeleteBehavior.Restrict;
             }
 
+
+
+            // Relación 1–1: Reserva (FK) -> Turno
+            modelBuilder.Entity<Reserva>()
+                .HasOne(r => r.Turno)
+                .WithOne(t => t.Reserva)
+                .HasForeignKey<Reserva>(r => r.TurnoId)
+                .HasConstraintName("FK_Reservas_Turnos_TurnoId");
+
+
+
             base.OnModelCreating(modelBuilder);
         }
     }
+
 }
 
-  
+

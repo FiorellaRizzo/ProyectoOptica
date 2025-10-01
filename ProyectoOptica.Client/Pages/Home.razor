@@ -2,6 +2,14 @@
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hola!</h1>
-
 Bienvenidos a la pagina web de nuestra optica.
+
+<AuthorizeView>
+    <Authorized>
+        <p>Hola... @context.User.Identity!.Name</p>
+        <p>Hola como estás, sos un usuario autenticado</p>
+    </Authorized>
+    <NotAuthorized>
+        <p>Hola No estás autenticado, realiza el login</p>
+    </NotAuthorized>
+</AuthorizeView>

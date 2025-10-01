@@ -1,6 +1,7 @@
 ﻿using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ProyectoOptica.Client.Servicios
+
 {
     public class HttpRespuesta<T>
     {
@@ -19,28 +20,20 @@ namespace ProyectoOptica.Client.Servicios
 
         public async Task<string> ObtenerError()
         {
-            if (!Error)
-            {
-                return "";
-            }
+            if (!Error) return string.Empty;
 
-            var statuscode = HttpResponseMessage.StatusCode;
+            var contenido = await HttpResponseMessage.Content.ReadAsStringAsync();
 
-            switch (statuscode)
+            return HttpResponseMessage.StatusCode switch
             {
-                case System.Net.HttpStatusCode.BadRequest:
-                    return HttpResponseMessage.Content.ReadAsStringAsync().ToString()!;
-                //                    return "Error, no se puede procesar la información";
-                case System.Net.HttpStatusCode.Unauthorized:
-                    return "Error, no está logueado";
-                case System.Net.HttpStatusCode.Forbidden:
-                    return "Error, no tiene autorización a ejecutar este proceso";
-                case System.Net.HttpStatusCode.NotFound:
-                    return "Error, dirección no encontrado";
-                default:
-                    return HttpResponseMessage.Content.ReadAsStringAsync().Result;
-            }
+                System.Net.HttpStatusCode.BadRequest => contenido,
+                System.Net.HttpStatusCode.Unauthorized => "Error, no está logueado",
+                System.Net.HttpStatusCode.Forbidden => "Error, no tiene autorización a ejecutar este proceso",
+                System.Net.HttpStatusCode.NotFound => "Error, dirección no encontrada",
+                _ => contenido
+            };
         }
-
     }
+
+    
 }

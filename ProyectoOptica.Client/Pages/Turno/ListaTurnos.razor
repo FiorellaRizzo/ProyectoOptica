@@ -1,0 +1,74 @@
+﻿@page "/api/Turnos"
+@inject IHttpServicio http
+@using ProyectoOptica.Shared.DTO
+
+<h3>Turnos disponibles</h3>
+<br />
+
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>Fecha y hora (tu zona)</th>
+            <th></th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @if (Mensaje == "")
+        {
+            @if (listaTurnos is null)
+            {
+                <tr><td colspan="2">Buscando...</td></tr>
+            }
+            else if (listaTurnos.Count == 0)
+            {
+                <tr><td colspan="2">No hay turnos disponibles.</td></tr>
+            }
+            else
+            {
+                @foreach (var item in listaTurnos)
+                {
+                    var local = DateTime.SpecifyKind(item.FechaHora, DateTimeKind.Utc).ToLocalTime();
+                    <tr>
+                        <td>@local.ToString("dddd dd/MM/yyyy HH:mm")</td>
+                        <td class="text-end">
+                            <a class="btn btn-success btn-sm"
+                               href="/api/Reservas/crear/@item.Id">
+                                Reservar
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+        }
+        else
+        {
+            <tr><td colspan="2" class="text-danger">Error: @Mensaje</td></tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    List<TurnoDisponibleDTO>? listaTurnos;
+    string Mensaje = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Leer();
+    }
+
+    private async Task Leer()
+    {
+        // End-point de API que ya creaste
+        var resp = await http.Get<List<TurnoDisponibleDTO>>("api/Turnos/disponibles");
+        if (!resp.Error)
+        {
+            listaTurnos = resp.Respuesta ?? new();
+        }
+        else
+        {
+            Mensaje = await resp.ObtenerError();
+        }
+    }
+}
+

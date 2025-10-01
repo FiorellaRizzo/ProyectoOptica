@@ -1,0 +1,88 @@
+﻿@page "/api/Reservas/crear/{turnoId:int}"
+@inject IHttpServicio http
+@inject NavigationManager Nav
+@using ProyectoOptica.Shared.DTO
+
+<h3>Reservar turno</h3>
+
+@if (turno is null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    var local = DateTime.SpecifyKind(turno.FechaHora, DateTimeKind.Utc).ToLocalTime();
+    <p><strong>Turno seleccionado:</strong> @local.ToString("dddd dd/MM/yyyy HH:mm")</p>
+
+    <EditForm Model="@form" OnValidSubmit="Enviar">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-2">
+            <label>Nombre</label>
+            <InputText class="form-control" @bind-Value="form.NombreCliente" />
+        </div>
+        <div class="mb-2">
+            <label>Email</label>
+            <InputText class="form-control" @bind-Value="form.EmailCliente" />
+        </div>
+        <div class="mb-2">
+            <label>Teléfono</label>
+            <InputText class="form-control" @bind-Value="form.Telefono" />
+        </div>
+        <div class="mb-2">
+            <label>Notas</label>
+            <InputTextArea class="form-control" @bind-Value="form.Notas" />
+        </div>
+
+        <button class="btn btn-success" disabled="@enviando">Confirmar</button>
+    </EditForm>
+
+    @if (!string.IsNullOrWhiteSpace(Mensaje))
+    {
+        <div class="text-danger mt-2">@Mensaje</div>
+    }
+}
+
+@code {
+    [Parameter] public int turnoId { get; set; }
+
+    TurnoDisponibleDTO? turno;
+    CrearReservaDTO form = new() { TurnoId = 0, NombreCliente = "", EmailCliente = "" };
+    bool enviando;
+    string Mensaje = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Traigo los disponibles y ubico el turno seleccionado solo para mostrar la fecha
+        var resp = await http.Get<List<TurnoDisponibleDTO>>("api/Turnos/disponibles");
+        if (!resp.Error)
+        {
+            var lista = resp.Respuesta ?? new();
+            turno = lista.FirstOrDefault(x => x.Id == turnoId);
+            form.TurnoId = turnoId;
+        }
+        else
+        {
+            Mensaje = await resp.ObtenerError();
+        }
+    }
+
+    async Task Enviar()
+    {
+        enviando = true; Mensaje = "";
+        var resp = await http.Post<CrearReservaDTO, int>("api/Reservas", form);
+
+        if (resp.Error)
+        {
+            Mensaje = await resp.ObtenerError();
+            enviando = false;
+            return;
+        }
+
+        var id = resp.Respuesta ;
+       // Si querés mantener el estilo profe en rutas:
+        Nav.NavigateTo($"/api/Reservas/confirmacion/{id}");
+    }
+}
+

@@ -10,20 +10,7 @@ namespace ProyectoOptica.Server.Util
     {
         public AutoMapperProfiles()
         {
-            CreateMap<CrearCitaDTO, Cita>();
-
-            // Mapper de Cita a ListaDeCitasDTO
-            CreateMap<ListaDeCitasDTO, Cita>();
-
-
-            CreateMap<CitaDTO, Cita>();
-
-
-            CreateMap<DisponibilidadDTO, Disponibilidad>();
-
-           
-            CreateMap<CrearDisponibilidadDTO, Disponibilidad>()
-                    .ForMember(dest => dest.IdDisponibilidad, opt => opt.Ignore());
+          
 
         }
     }

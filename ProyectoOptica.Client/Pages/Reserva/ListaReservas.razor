@@ -1,0 +1,120 @@
+﻿@page "/api/Reservas"
+@inject IHttpServicio http
+@using ProyectoOptica.Shared.DTO
+@inject NavigationManager navigationManager
+
+<h3>Listado de Reservas</h3>
+<br />
+
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>Fecha y hora (tu zona)</th>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Teléfono</th>
+            <th>Notas</th>
+            <th></th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @if (Mensaje == "")
+        {
+            @if (lista is null)
+            {
+                <tr><td colspan="6">Buscando...</td></tr>
+            }
+            else if (lista.Count == 0)
+            {
+                <tr><td colspan="6">No hay reservas.</td></tr>
+            }
+            else
+            {
+                @foreach (var r in lista)
+                {
+                    var local = DateTime.SpecifyKind(r.FechaHoraUtc, DateTimeKind.Utc).ToLocalTime();
+                    <tr>
+                        <td>@local.ToString("dddd dd/MM/yyyy HH:mm")</td>
+                        <td>@r.NombreCliente</td>
+                        <td>@r.EmailCliente</td>
+                        <td>@r.Telefono</td>
+                        <td>@r.Notas</td>
+                        <td class="text-end">
+                            <button class="btn btn-danger btn-sm" @onclick="() => PedirConfirmacion(r)">
+                                Cancelar
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }
+        }
+        else
+        {
+            <tr><td colspan="6" class="text-danger">Error: @Mensaje</td></tr>
+        }
+    </tbody>
+</table>
+
+<Confirmacion @ref="confirmacion"
+              Titulo="CUIDADO"
+              textCancelar="Salir"
+              onCancel="Cancelar"
+              onConfirm="Borrar">
+    <h5>Está por borrar el tipo de documento</h5>
+    <br />
+    <p>Está seguro?</p>
+</Confirmacion>
+
+
+@code {
+    Confirmacion confirmacion;
+
+    List<ReservaDTO>? lista;
+    ReservaDTO? seleccionada;
+    string Mensaje = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Leer();
+    }
+
+    private async Task Leer()
+    {
+        var resp = await http.Get<List<ReservaDTO>>("api/Reservas");
+        if (!resp.Error)
+        {
+            lista = resp.Respuesta ?? new();
+        }
+        else
+        {
+            Mensaje = await resp.ObtenerError();
+        }
+    }
+
+    private void PedirConfirmacion(ReservaDTO r)
+    {
+        seleccionada = r;
+        confirmacion.Ver();
+    }
+
+    private void Cancelar()
+    {
+        seleccionada = null;
+        confirmacion.Ocultar();
+    }
+
+    private async Task Borrar()
+    {
+        if (seleccionada is null) return;
+
+        var resp = await http.Delete($"api/Reservas/{seleccionada.Id}");
+        if (resp.Error)
+        {
+            Mensaje = await resp.ObtenerError();
+        }
+
+        Cancelar();
+        await Leer();
+    }
+}

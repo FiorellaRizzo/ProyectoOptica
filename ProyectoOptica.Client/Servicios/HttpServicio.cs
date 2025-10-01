@@ -1,8 +1,7 @@
-﻿
+﻿using Azure;
+using ProyectoOptica.Client.Servicios;
 using System.Text;
 using System.Text.Json;
-
-
 
 namespace ProyectoOptica.Client.Servicios
 {
@@ -15,7 +14,7 @@ namespace ProyectoOptica.Client.Servicios
             this.http = http;
         }
 
-        public async Task<HttpRespuesta<T>> Get<T>(string url) //https://localhost:7063/api/cita
+        public async Task<HttpRespuesta<T>> Get<T>(string url) //https://localhost:7063/api/Turnos/disponibles
         {
             var response = await http.GetAsync(url);
 
@@ -31,7 +30,7 @@ namespace ProyectoOptica.Client.Servicios
             }
         }
 
-        public async Task<HttpRespuesta<object>> Post<T>(string url, T entidad)
+        public async Task<HttpRespuesta<TResp>> Post<T, TResp>(string url, T entidad)
         {
             var enviarJson = JsonSerializer.Serialize(entidad);
 
@@ -42,12 +41,12 @@ namespace ProyectoOptica.Client.Servicios
             var response = await http.PostAsync(url, enviarContent);
             if (response.IsSuccessStatusCode)
             {
-                var respuesta = await DesSerializar<object>(response);
-                return new HttpRespuesta<object>(respuesta, false, response);
+                var respuesta = await DesSerializar<TResp>(response);
+                return new HttpRespuesta<TResp>(respuesta, false, response);
             }
             else
             {
-                return new HttpRespuesta<object>(default, true, response);
+                return new HttpRespuesta<TResp>(default, true, response);
             }
         }
 
@@ -87,9 +86,3 @@ namespace ProyectoOptica.Client.Servicios
         }
     }
 }
-
-       
-    
-
-
-
